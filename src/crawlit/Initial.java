@@ -85,8 +85,9 @@ public class Initial {
 			ResultSet rs = stmt.executeQuery(sql);
 			if (rs.getInt(1) == 0){
 				sql = "CREATE TABLE SCENERYSPOT " + 
-			             "(NAME CHAR(10)  PRIMARY KEY NOT NULL, "  +
-			             "PROVINCE	CHAR(10) NOT NULL); ";
+			             "(NAME CHAR(50)  PRIMARY KEY NOT NULL, "  +
+						 "CITY CHAR(10) NOT NULL, " +
+			             "PROVINCE	CHAR(50) NOT NULL); ";
 				stmt.executeUpdate(sql);				
 			}		
 			
@@ -131,7 +132,6 @@ public class Initial {
 			System.exit(0);
 		}
 		System.out.println("  delete_sceneryspot_table() out.");
-
 	}
 
 	public static void main(String[] args) {
