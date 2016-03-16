@@ -86,8 +86,16 @@ public class Initial {
 			if (rs.getInt(1) == 0){
 				sql = "CREATE TABLE SCENERYSPOT " + 
 			             "(NAME CHAR(50)  PRIMARY KEY NOT NULL, "  +
-						 "CITY CHAR(10) NOT NULL, " +
-			             "PROVINCE	CHAR(50) NOT NULL); ";
+						 "INTRODUCTION CHAR(1000)," +
+						 "TELE CHAR(100), " +
+			             "WEBADDR CHAR(100), " +
+						 "TRANSFER CHAR(100), " +
+			             "TICKET CHAR(200), " +
+						 "OPENTIME CHAR(200), " +
+			             "SPENDTIME CHAR(50), " +
+						 "ADDR CHAR(200), " +
+						 "CITY CHAR(10), " +
+			             "PROVINCE	CHAR(50)); ";
 				stmt.executeUpdate(sql);				
 			}		
 			
