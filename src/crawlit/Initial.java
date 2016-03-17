@@ -85,7 +85,8 @@ public class Initial {
 			ResultSet rs = stmt.executeQuery(sql);
 			if (rs.getInt(1) == 0){
 				sql = "CREATE TABLE SCENERYSPOT " + 
-			             "(NAME CHAR(50)  PRIMARY KEY NOT NULL, "  +
+			             "(ID INTEGER," +
+			             "NAME CHAR(50) PRIMARY KEY NOT NULL,"  +
 						 "INTRODUCTION CHAR(1000)," +
 						 "TELE CHAR(100), " +
 			             "WEBADDR CHAR(100), " +

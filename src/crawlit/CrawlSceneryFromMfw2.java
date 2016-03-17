@@ -8,8 +8,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import java.util.ArrayList;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -274,11 +277,141 @@ public class CrawlSceneryFromMfw2 {
 		System.out.println("  getScenerySpotInfo() out.");
     }
 	
+	public static void getScenerySpotWebAddrList(String input_addr) throws Exception {
+		System.out.println("  getScenerySpotWebAddrList() in.");
+		
+		// 打开数据库
+		Connection c = null;
+		Statement stmt = null;
+		try{
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:test.db");
+			c.setAutoCommit(false);    			   			
+			stmt = c.createStatement();    			
+		}catch(Exception e ){
+			System.err.println(e.getClass().getName()+":"+e.getMessage());
+			System.exit(0);
+		}
+		
+		
+		
+		ArrayList webAddrList = new ArrayList();
+
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpGet httpget = new HttpGet(input_addr);
+        CloseableHttpResponse response = httpclient.execute(httpget);
+        HttpEntity entity = response.getEntity();
+        String html = EntityUtils.toString(entity);        
+        html = html.replaceAll("[\\t\\n\\r]", "");//将内容区域的回车换行去除
+        System.out.println(html);    
+        
+        int id_int;
+        String id_string;
+        String web_addr;
+        String name;
+        // <a href="/poi/2293952.html" target="_blank">夫子庙-秦淮风光带</a>
+        String regEx = "href=\"/poi/([0-9]*?).html\" target=\"_blank\""
+        		+ "([\\s\\S]*?)([<img\\s\\S]*?>)([\u4E00-\u9FA5-\\(\\)]*?)</";		
+        Pattern pat = Pattern.compile(regEx);
+    	Matcher mat = pat.matcher(html);
+    	while(mat.find()){
+    		name = mat.group(4);
+    		id_string = mat.group(1);
+    		id_int = Integer.parseInt(mat.group(1));
+    		web_addr = "http://www.mafengwo.cn/poi/" + id_string + ".html";
+    		webAddrList.add(web_addr);
+    		System.out.println(name + ": " + web_addr);    		
+    		
+    		try{
+    			// 先看看是否在数据库中已经存在   	
+    			String exit_name = "";
+    			boolean is_exit = false;
+    			ResultSet rs = stmt.executeQuery("SELECT NAME FROM SCENERYSPOT;");    			
+    			while(rs.next()){    				
+    				exit_name = rs.getString("NAME");
+    				if(exit_name.equals(name) || name.equals("") ){
+    					System.out.println(exit_name + " already exits.");
+    					is_exit = true;
+    					break;
+    				} 				
+    			}
+    			
+    			// 如果数据库中没有，则添加  
+    			if (!is_exit){ 
+    				String sql = "INSERT INTO SCENERYSPOT (NAME, ID, WEBADDR)" +
+    					     "VALUES ('" + name +     "', '" + id_string + "','" + web_addr + "');";
+    				//PreparedStatement ps = null;
+    				//ps = c.prepareStatement(sql);
+    				//ps.setInt(1, id_int);
+    				
+    				stmt.executeUpdate(sql);
+    				c.commit();	    				
+    			}
+				rs.close();
+    		}catch(Exception e ){
+    			System.err.println(e.getClass().getName()+":"+e.getMessage());
+    			System.exit(0);
+    		}
+    	}
+    	
+    /*
+  	
+    	while(mat.find()){
+    		try{
+    			Class.forName("org.sqlite.JDBC");
+    			c = DriverManager.getConnection("jdbc:sqlite:test.db");
+    			c.setAutoCommit(false);    			   			
+    			stmt = c.createStatement();    			
+    			
+    			// 先看看该景点是否在数据库中已经存在   		
+    			boolean is_exit = false;
+    			ResultSet rs = stmt.executeQuery("SELECT NAME FROM SCENERYSPOT;");    			
+    			while(rs.next()){    				
+    				name = rs.getString("NAME");
+    				if(name.equals(mat.group(2))){
+    					System.out.println("this province already exits.");
+    					is_exit = true;
+    				}    				
+    			}    			
+    			
+    			// 如果数据库中没有该景点，则添加  	
+    			if (!is_exit){  
+    				String sql = "INSERT INTO SCENERYSPOT (NAME, CITY, PROVINCE)" +
+    					     "VALUES ('" + mat.group(2) + "', '" + city + "','" + province +"');";
+    				stmt.executeUpdate(sql);
+    			}
+				
+				rs.close();
+				stmt.close();
+				c.commit();
+				
+				c.close();
+    		}catch(Exception e ){
+    			System.err.println(e.getClass().getName()+":"+e.getMessage());
+    			System.exit(0);
+    		}
+    	}*/
+    	
+    	// 关闭数据库
+    	try{
+			stmt.close();
+			c.close();
+		}catch(Exception e ){
+			System.err.println(e.getClass().getName()+":"+e.getMessage());
+			System.exit(0);
+		}
+    			
+        httpclient.close();
+        
+		System.out.println("  getScenerySpotWebAddrList() out.");		
+	}
+	
 	public static void main(String[] args) throws Exception {
 		System.out.println("main() in"); 
 		
 		//getCitySceneryList();	
-		getScenerySpotInfo("http://www.mafengwo.cn/poi/2293952.html");
+		//getScenerySpotInfo("http://www.mafengwo.cn/poi/2293952.html");
+		getScenerySpotWebAddrList("http://www.mafengwo.cn/jd/10684/gonglve.html");
 		
 		System.out.println("main() out"); 
 	}
